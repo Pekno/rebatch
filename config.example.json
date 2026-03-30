@@ -1,0 +1,19 @@
+{
+  "resendApiKey": "re_xxxxxxxxxxxx",
+  "segmentId": "seg_xxxxxxxxxxxx",
+  "supabaseAccessToken": "sbp_xxxxxxxxxxxx",
+  "supabaseUrl": "https://your-project.supabase.co",
+  "supabaseServiceKey": "eyJ_YOUR_SERVICE_ROLE_KEY_HERE",
+  "fromEmail": "Your Name <you@example.com>",
+  "replyTo": "you@example.com",
+  "batchSize": 100,
+  "pollIntervalMs": 5000,
+  "pollTimeoutMs": 300000,
+  "rateLimitDelayMs": 600,
+  "csvColumns": {
+    "email": "email",
+    "firstName": "firstname",
+    "lastName": "lastname",
+    "organization": "organization"
+  }
+}

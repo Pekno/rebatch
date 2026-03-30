@@ -1,0 +1,7 @@
+email,firstname,lastname,organization
+valid@example.com,Valid,User,Company
+not-an-email,Bad,User,Company
+@missing.com,Missing,Local,Company
+spaces @example.com,Space,User,Company
+,Empty,User,Company
+also-valid@test.org,Also,Valid,TestCo
