@@ -3,8 +3,8 @@
 <div align="center">
 
 ![GitHub Tag](https://img.shields.io/github/v/tag/pekno/rebatch?label=latest%20version)
-[![npm version](https://img.shields.io/npm/v/rebatch)](https://www.npmjs.com/package/rebatch)
-[![npm downloads](https://img.shields.io/npm/dm/rebatch)](https://www.npmjs.com/package/rebatch)
+[![npm version](https://img.shields.io/npm/v/%40pekno%2Frebatch)](https://www.npmjs.com/package/@pekno/rebatch)
+[![npm downloads](https://img.shields.io/npm/dm/%40pekno%2Frebatch)](https://www.npmjs.com/package/@pekno/rebatch)
 [![Tests](https://github.com/pekno/rebatch/actions/workflows/test.yml/badge.svg)](https://github.com/pekno/rebatch/actions/workflows/test.yml)
 ![License](https://img.shields.io/github/license/pekno/rebatch)
 
