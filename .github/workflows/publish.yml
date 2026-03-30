@@ -3,9 +3,13 @@ name: Publish to npm
 on:
   release:
     types: [published]
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 jobs:
   test:
+    if: github.event_name == 'release' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     strategy:
       matrix:
