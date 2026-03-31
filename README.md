@@ -59,7 +59,7 @@ When a recipient clicks the link, the Edge Function updates their `unsubscribed_
 ### 1. Install
 
 ```bash
-npm install -g rebatch
+npm install -g @pekno/rebatch
 ```
 
 ### 2. Create your Resend template
