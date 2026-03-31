@@ -160,6 +160,41 @@ describe('ResendClient', () => {
     });
   });
 
+  describe('listAudiences', () => {
+    it('returns data array', async () => {
+      fetchMock.mock.mockImplementation(() =>
+        jsonResponse({ data: [{ id: 'aud_1', name: 'rebatch' }] })
+      );
+
+      const result = await client.listAudiences();
+      assert.equal(result.length, 1);
+      assert.equal(result[0].name, 'rebatch');
+    });
+
+    it('returns empty array when data is null', async () => {
+      fetchMock.mock.mockImplementation(() => jsonResponse({}));
+
+      const result = await client.listAudiences();
+      assert.deepStrictEqual(result, []);
+    });
+  });
+
+  describe('createAudience', () => {
+    it('sends correct payload', async () => {
+      fetchMock.mock.mockImplementation(() =>
+        jsonResponse({ id: 'aud_1', name: 'rebatch' })
+      );
+
+      const result = await client.createAudience('rebatch');
+
+      const [url, opts] = fetchMock.mock.calls[0].arguments;
+      assert.equal(url, 'https://api.resend.com/audiences');
+      assert.equal(opts.method, 'POST');
+      assert.deepStrictEqual(JSON.parse(opts.body), { name: 'rebatch' });
+      assert.equal(result.id, 'aud_1');
+    });
+  });
+
   describe('addContact', () => {
     it('sends correct payload', async () => {
       fetchMock.mock.mockImplementation(() => jsonResponse({ id: 'c_1' }));

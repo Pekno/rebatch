@@ -81,12 +81,15 @@ Tests `src/resend-client.js` — the Resend API wrapper with retry logic, rate l
 
 | Test | Line | What it verifies |
 |---|---|---|
-| addContact sends correct payload | [L164](test/resend-client.test.js#L164) | Payload shape: `email`, `first_name`, `last_name`, `segments`, `unsubscribed`, `properties` |
-| listContacts returns data array | [L185](test/resend-client.test.js#L185) | Unwraps `{ data: [...] }` response to plain array |
-| listContacts returns empty array when data is null | [L195](test/resend-client.test.js#L195) | Handles missing `data` field gracefully |
-| getTemplateByName resolves template | [L204](test/resend-client.test.js#L204) | Lists templates, finds match by name, fetches full template |
-| getTemplateByName throws when not found | [L222](test/resend-client.test.js#L222) | Error message includes the missing name and available templates |
-| createBroadcast sends correct payload | [L234](test/resend-client.test.js#L234) | Payload shape: `segment_id`, `from`, `reply_to`, `subject`, `html`, `name` |
+| listAudiences returns data array | [L164](test/resend-client.test.js#L164) | Unwraps `{ data: [...] }` response to plain array |
+| listAudiences returns empty array when data is null | [L174](test/resend-client.test.js#L174) | Handles missing `data` field gracefully |
+| createAudience sends correct payload | [L183](test/resend-client.test.js#L183) | Payload shape: `{ name }`, correct endpoint, returns created object |
+| addContact sends correct payload | [L198](test/resend-client.test.js#L198) | Payload shape: `email`, `first_name`, `last_name`, `segments`, `unsubscribed`, `properties` |
+| listContacts returns data array | [L219](test/resend-client.test.js#L219) | Unwraps `{ data: [...] }` response to plain array |
+| listContacts returns empty array when data is null | [L229](test/resend-client.test.js#L229) | Handles missing `data` field gracefully |
+| getTemplateByName resolves template | [L238](test/resend-client.test.js#L238) | Lists templates, finds match by name, fetches full template |
+| getTemplateByName throws when not found | [L256](test/resend-client.test.js#L256) | Error message includes the missing name and available templates |
+| createBroadcast sends correct payload | [L268](test/resend-client.test.js#L268) | Payload shape: `segment_id`, `from`, `reply_to`, `subject`, `html`, `name` |
 
 ## Supabase Client — [`test/supabase-client.test.js`](test/supabase-client.test.js)
 

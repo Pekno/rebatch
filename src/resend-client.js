@@ -70,6 +70,17 @@ export class ResendClient {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  // --- Audiences ---
+
+  async listAudiences() {
+    const result = await this.request('GET', '/audiences');
+    return result?.data || [];
+  }
+
+  async createAudience(name) {
+    return this.request('POST', '/audiences', { name });
+  }
+
   // --- Contacts ---
 
   async addContact(segmentId, { email, firstName, lastName, properties }) {

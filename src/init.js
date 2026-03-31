@@ -6,6 +6,7 @@ import JSZip from 'jszip';
 import * as p from '@clack/prompts';
 import { getEdgeFunctionSource } from './edge-function.js';
 import * as log from './logger.js';
+import { ResendClient } from './resend-client.js';
 
 const SUPABASE_API = 'https://api.supabase.com';
 
@@ -172,17 +173,60 @@ export async function runInit() {
   }
 
   // --- Resend config ---
-  const resend = await p.group({
-    resendApiKey: () => p.text({
-      message: 'Resend API key',
-      placeholder: 're_...',
-      validate: (v) => v.length === 0 ? 'Required' : undefined,
-    }),
-    segmentId: () => p.text({
-      message: 'Resend segment/audience ID',
-      validate: (v) => v.length === 0 ? 'Required' : undefined,
-    }),
-  }, { onCancel: cancelled });
+  const resendApiKey = await p.text({
+    message: 'Resend API key',
+    placeholder: 're_...',
+    validate: (v) => v.length === 0 ? 'Required' : undefined,
+  });
+  if (p.isCancel(resendApiKey)) return cancelled();
+
+  const MAX_FREE_AUDIENCES = 3;
+  const AUDIENCE_NAME = 'rebatch';
+  const resendClient = new ResendClient(resendApiKey);
+
+  const audSpinner = log.spinner('Fetching Resend audiences...');
+  audSpinner.start();
+  let audiences;
+  try {
+    audiences = await resendClient.listAudiences();
+  } catch (err) {
+    audSpinner.fail(`Failed to fetch audiences: ${err.message}`);
+    p.outro('Check that your Resend API key is correct.');
+    return;
+  }
+  audSpinner.succeed(`Found ${audiences.length} audience(s)`);
+
+  let segmentId;
+  const existing = audiences.find(
+    (a) => a.name.toLowerCase() === AUDIENCE_NAME.toLowerCase()
+  );
+
+  if (existing) {
+    segmentId = existing.id;
+    log.success(`Reusing existing "${existing.name}" audience`);
+  } else if (audiences.length < MAX_FREE_AUDIENCES) {
+    const createSpinner = log.spinner(`Creating "${AUDIENCE_NAME}" audience...`);
+    createSpinner.start();
+    try {
+      const created = await resendClient.createAudience(AUDIENCE_NAME);
+      segmentId = created.id;
+      createSpinner.succeed(`Created "${AUDIENCE_NAME}" audience (${created.id})`);
+    } catch (err) {
+      createSpinner.fail(`Failed to create audience: ${err.message}`);
+      return;
+    }
+  } else {
+    log.warn(`All ${MAX_FREE_AUDIENCES} audience slots are in use and none is named "${AUDIENCE_NAME}".`);
+    segmentId = await p.select({
+      message: 'Select an existing audience to use',
+      options: audiences.map((a) => ({
+        value: a.id,
+        label: a.name,
+        hint: a.id,
+      })),
+    });
+    if (p.isCancel(segmentId)) return cancelled();
+  }
 
   // --- Supabase config ---
   const supabaseAccessToken = await p.text({
@@ -255,8 +299,8 @@ export async function runInit() {
 
   // --- Build config ---
   const config = {
-    resendApiKey: resend.resendApiKey,
-    segmentId: resend.segmentId,
+    resendApiKey,
+    segmentId,
     supabaseAccessToken,
     supabaseUrl,
     supabaseServiceKey,

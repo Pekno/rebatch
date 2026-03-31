@@ -49,9 +49,9 @@ When a recipient clicks the link, the Edge Function updates their `unsubscribed_
 
 ## Prerequisites
 
-- **Node.js 18+** (uses native `fetch`)
+- **Node.js 22+**
 - **Supabase** project + personal access token (Account > Access Tokens)
-- **Resend** account with API key and one available audience/segment
+- **Resend** account with API key (an audience is created automatically during init)
 - **Resend email template** created beforehand (see below)
 
 ## Setup
@@ -81,8 +81,9 @@ rebatch init
 ```
 
 The `init` command will:
-1. Prompt for your Resend API key and segment ID
-2. Connect to Supabase via your access token and let you pick a project
+1. Prompt for your Resend API key
+2. Automatically create (or reuse) a `rebatch` audience in Resend
+3. Connect to Supabase via your access token and let you pick a project
 3. Auto-fetch the project's API keys
 4. Create the `email_recipients` table
 5. Deploy the unsubscribe Edge Function
@@ -93,12 +94,11 @@ Config location:
 - **macOS**: `~/Library/Application Support/rebatch/config.json`
 - **Linux**: `~/.config/rebatch/config.json`
 
-You only need three credentials:
+You only need two credentials:
 
 | Field | Where to find it |
 |-------|-----------------|
 | `resendApiKey` | Resend dashboard > API Keys |
-| `segmentId` | Resend dashboard > Audiences > your segment ID |
 | `supabaseAccessToken` | Supabase dashboard > Account > Access Tokens |
 
 ## Usage
@@ -156,7 +156,7 @@ rebatch config
 | Field | Default | Description |
 |-------|---------|-------------|
 | `resendApiKey` | — | Resend API key |
-| `segmentId` | — | Resend segment/audience ID |
+| `segmentId` | — | Resend audience ID (auto-created during init) |
 | `supabaseAccessToken` | — | Supabase personal access token (used during init) |
 | `supabaseUrl` | — | Supabase project URL (auto-fetched) |
 | `supabaseServiceKey` | — | Supabase service role key (auto-fetched) |
@@ -179,7 +179,7 @@ Runtime depends on your contact list size. Each batch of 100 contacts takes ~3-4
 ## Testing
 
 ```bash
-npm test                # run all 61 tests
+npm test                # run all 64 tests
 npm run test:coverage   # run with coverage report
 ```
 
