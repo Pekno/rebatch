@@ -30,7 +30,7 @@ Because Resend limits audiences to 1000 contacts, the tool sends emails in small
 2. **Create a broadcast** using your Resend template
 3. **Send the broadcast** to the segment
 4. **Wait** for delivery confirmation (polls broadcast status)
-5. **Remove contacts** from the segment (only the ones we added — pre-existing contacts are protected)
+5. **Clean up contacts** — newly created contacts are fully deleted from Resend; contacts that already existed before the batch are only removed from the segment (not deleted)
 6. **Update Supabase** — mark recipients as `sent`
 
 This cycle repeats for every batch until all pending recipients are processed. The process is **resumable**: if interrupted, re-run the same command and it picks up where it left off.

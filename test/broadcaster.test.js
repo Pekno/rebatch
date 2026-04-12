@@ -32,6 +32,10 @@ function createMockResendClient() {
       calls.push({ method: 'removeContact', id });
       return null;
     },
+    removeContactFromSegment: async (contactId, segmentId) => {
+      calls.push({ method: 'removeContactFromSegment', contactId, segmentId });
+      return null;
+    },
   };
 }
 
@@ -131,13 +135,44 @@ describe('runBatches', () => {
     assert.equal(updateCalls[0].args[0].status, 'failed');
   });
 
-  it('preserves pre-existing segment contacts', async () => {
+  it('pre-existing contacts are removed from segment only, not deleted', async () => {
     setupSupabase([{ error: null }]);
 
-    // Pre-existing contacts in segment
+    // Simulate a contact already present in the segment before the batch
     mockResend.listContacts = async () => {
       mockResend.calls.push('listContacts');
       return [{ id: 'existing-1', email: 'old@x.com' }];
+    };
+    // addContact returns the same ID for a pre-existing contact (Resend upsert)
+    mockResend.addContact = async (segmentId, contact) => {
+      mockResend.calls.push({ method: 'addContact', email: contact.email });
+      return { id: 'existing-1' };
+    };
+
+    const batches = [[
+      { id: 'r1', email: 'old@x.com', first_name: '', last_name: '', organization: '', unsubscribe_token: '' },
+    ]];
+
+    await runBatches(mockResend, baseConfig, 'test-group', batches, '<p>Hi</p>', 'Sub');
+
+    // removeContact (full delete) must NOT be called for the pre-existing contact
+    const deleteCalls = mockResend.calls.filter((c) => c.method === 'removeContact');
+    assert.equal(deleteCalls.length, 0, 'should not fully delete a pre-existing contact');
+
+    // removeContactFromSegment MUST be called for it instead
+    const segmentRemoveCalls = mockResend.calls.filter((c) => c.method === 'removeContactFromSegment');
+    assert.equal(segmentRemoveCalls.length, 1, 'should remove pre-existing contact from segment');
+    assert.equal(segmentRemoveCalls[0].contactId, 'existing-1');
+    assert.equal(segmentRemoveCalls[0].segmentId, baseConfig.segmentId);
+  });
+
+  it('newly created contacts are fully deleted after send', async () => {
+    setupSupabase([{ error: null }]);
+
+    // listContacts returns empty — no pre-existing contacts
+    mockResend.listContacts = async () => {
+      mockResend.calls.push('listContacts');
+      return [];
     };
 
     const batches = [[
@@ -146,10 +181,13 @@ describe('runBatches', () => {
 
     await runBatches(mockResend, baseConfig, 'test-group', batches, '<p>Hi</p>', 'Sub');
 
-    // removeContact should only be called for the newly added contact, not existing-1
-    const removeCalls = mockResend.calls.filter((c) => c.method === 'removeContact');
-    for (const call of removeCalls) {
-      assert.notEqual(call.id, 'existing-1', 'should not remove pre-existing contact');
-    }
+    // removeContact (full delete) must be called for the new contact
+    const deleteCalls = mockResend.calls.filter((c) => c.method === 'removeContact');
+    assert.equal(deleteCalls.length, 1, 'should fully delete a newly created contact');
+    assert.equal(deleteCalls[0].id, 'contact-new@x.com');
+
+    // removeContactFromSegment must NOT be called
+    const segmentRemoveCalls = mockResend.calls.filter((c) => c.method === 'removeContactFromSegment');
+    assert.equal(segmentRemoveCalls.length, 0, 'should not use segment-removal for a new contact');
   });
 });
