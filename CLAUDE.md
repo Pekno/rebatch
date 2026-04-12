@@ -79,14 +79,11 @@ Version is bumped automatically based on the PR title (conventional commits):
 | Starts with `feat:` or `feat(...):` | `minor` |
 | Anything else (`fix:`, `chore:`, `docs:`, etc.) | `patch` |
 
-The new version is computed from the latest git tag. A release PR is opened automatically and merges itself once CI passes — no branch protection bypass required. **Do not manually edit `package.json` version** — it is managed by the workflow.
+The new version is computed from the latest git tag. A `chore: release vX.Y.Z` PR is opened automatically — once CI passes, merge it manually to trigger the publish. **Do not manually edit `package.json` version** — it is managed by the workflow.
 
 ### Required secrets
 - `NPM_TOKEN` — npm publish token (set in GitHub repo secrets)
 - `GITHUB_TOKEN` — automatically provided by GitHub Actions (needs `contents: write` and `pull-requests: write`)
-
-### Required GitHub repo settings
-- **Allow auto-merge**: Settings → General → Pull Requests → Allow auto-merge
 
 ## Development notes
 
