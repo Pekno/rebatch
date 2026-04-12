@@ -87,6 +87,7 @@ Tests `src/resend-client.js` — the Resend API wrapper with retry logic, rate l
 | addContact sends correct payload | [L198](test/resend-client.test.js#L198) | Payload shape: `email`, `first_name`, `last_name`, `segments`, `unsubscribed`, `properties` |
 | listContacts returns data array | [L219](test/resend-client.test.js#L219) | Unwraps `{ data: [...] }` response to plain array |
 | listContacts returns empty array when data is null | [L229](test/resend-client.test.js#L229) | Handles missing `data` field gracefully |
+| removeContactFromSegment sends DELETE to correct URL | [L238](test/resend-client.test.js#L238) | Issues `DELETE /contacts/:id/segments/:segmentId` — removes contact from segment without deleting them |
 | getTemplateByName resolves template | [L238](test/resend-client.test.js#L238) | Lists templates, finds match by name, fetches full template |
 | getTemplateByName throws when not found | [L256](test/resend-client.test.js#L256) | Error message includes the missing name and available templates |
 | createBroadcast sends correct payload | [L268](test/resend-client.test.js#L268) | Payload shape: `segment_id`, `from`, `reply_to`, `subject`, `html`, `name` |
@@ -135,7 +136,8 @@ Tests `src/broadcaster.js` — the core 6-step batch loop that orchestrates Rese
 | completes all 6 steps for a single batch | [L60](test/broadcaster.test.js#L60) | Steps execute in order: add contacts, create broadcast, send, poll, remove, mark sent |
 | processes multiple batches sequentially | [L89](test/broadcaster.test.js#L89) | Two batches each go through the full 6-step cycle |
 | cleans up and marks failed on error | [L106](test/broadcaster.test.js#L106) | When `createBroadcast` throws, contacts are cleaned up and recipients marked as failed |
-| preserves pre-existing segment contacts | [L134](test/broadcaster.test.js#L134) | Contacts already in the segment before the batch are never removed |
+| pre-existing contacts are removed from segment only, not deleted | [L134](test/broadcaster.test.js#L134) | When `addContact` returns the ID of a pre-existing contact, `removeContactFromSegment` is called instead of `removeContact` — the contact is never fully deleted |
+| newly created contacts are fully deleted after send | [L163](test/broadcaster.test.js#L163) | When a contact is new (not in `protectedContactIds`), `removeContact` (full delete) is called and `removeContactFromSegment` is not |
 
 ## Edge Function — [`test/edge-function.test.js`](test/edge-function.test.js)
 

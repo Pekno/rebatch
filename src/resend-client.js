@@ -103,6 +103,10 @@ export class ResendClient {
     return this.request('DELETE', `/contacts/${contactId}`);
   }
 
+  async removeContactFromSegment(contactId, segmentId) {
+    return this.request('DELETE', `/contacts/${contactId}/segments/${segmentId}`);
+  }
+
   // --- Templates ---
 
   async listTemplates() {

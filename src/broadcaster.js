@@ -59,9 +59,9 @@ export async function runBatches(client, config, groupName, batches, html, subje
       await pollBroadcast(client, broadcast.id, config.pollIntervalMs, config.pollTimeoutMs);
       log.stepDone(3);
 
-      // Step 4: Remove only the contacts we added (preserve pre-existing ones)
+      // Step 4: Remove contacts from segment; delete only newly-created ones
       log.stepStart(4);
-      await removeBatchContacts(client, addedContactIds);
+      await removeBatchContacts(client, addedContactIds, protectedContactIds, config.segmentId);
       log.stepDone(4);
 
       // Step 5: Mark as sent in Supabase
@@ -81,7 +81,7 @@ export async function runBatches(client, config, groupName, batches, html, subje
       log.error(`Batch ${i + 1} failed: ${err.message}`);
       await markBatchFailed(batchIds);
       try {
-        await removeBatchContacts(client, addedContactIds);
+        await removeBatchContacts(client, addedContactIds, protectedContactIds, config.segmentId);
       } catch (cleanupErr) {
         log.warn(`Cleanup failed: ${cleanupErr.message}`);
       }
@@ -116,10 +116,15 @@ async function addContacts(client, segmentId, batch) {
   return addedIds;
 }
 
-async function removeBatchContacts(client, contactIds) {
+async function removeBatchContacts(client, contactIds, protectedContactIds, segmentId) {
   for (const contactId of contactIds) {
     try {
-      await client.removeContact(contactId);
+      if (protectedContactIds.has(contactId)) {
+        // Pre-existing contact: only remove from segment, don't delete
+        await client.removeContactFromSegment(contactId, segmentId);
+      } else {
+        await client.removeContact(contactId);
+      }
     } catch (err) {
       // Silent — step-level error shown if entire step fails
     }

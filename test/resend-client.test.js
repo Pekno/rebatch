@@ -265,6 +265,18 @@ describe('ResendClient', () => {
     });
   });
 
+  describe('removeContactFromSegment', () => {
+    it('sends DELETE to the correct URL', async () => {
+      fetchMock.mock.mockImplementation(() => new Response(null, { status: 204 }));
+
+      await client.removeContactFromSegment('c_1', 'seg_1');
+
+      const [url, opts] = fetchMock.mock.calls[0].arguments;
+      assert.equal(url, 'https://api.resend.com/contacts/c_1/segments/seg_1');
+      assert.equal(opts.method, 'DELETE');
+    });
+  });
+
   describe('createBroadcast', () => {
     it('sends correct payload', async () => {
       fetchMock.mock.mockImplementation(() => jsonResponse({ id: 'bc_1' }));
