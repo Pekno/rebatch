@@ -1,0 +1,86 @@
+name: Auto Version Bump
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  version-bump:
+    if: |
+      github.event.pull_request.merged == true &&
+      !startsWith(github.event.pull_request.title, 'chore: release v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version bump type
+        id: bump
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          TITLE="${PR_TITLE}"
+          BODY="${PR_BODY}"
+
+          if echo "$TITLE$BODY" | grep -qi "BREAKING CHANGE"; then
+            echo "type=major" >> "$GITHUB_OUTPUT"
+          elif echo "$TITLE" | grep -qiE "^feat(\(.+\))?!?:"; then
+            echo "type=minor" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=patch" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute new version from latest tag
+        id: version
+        run: |
+          LATEST=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          CURRENT=${LATEST#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          BUMP="${{ steps.bump.outputs.type }}"
+
+          if [ "$BUMP" = "major" ]; then
+            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+          elif [ "$BUMP" = "minor" ]; then
+            MINOR=$((MINOR + 1)); PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEW="$MAJOR.$MINOR.$PATCH"
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+
+      - name: Bump package.json
+        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Create release PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH="release/v${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add package.json
+          git commit -m "chore: release v${{ steps.version.outputs.version }}"
+          git push origin "$BRANCH"
+
+          PR_URL=$(gh pr create \
+            --title "chore: release v${{ steps.version.outputs.version }}" \
+            --body "Automated version bump to v${{ steps.version.outputs.version }}." \
+            --base main \
+            --head "$BRANCH")
+
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge --auto --squash "${{ steps.pr.outputs.pr_url }}"

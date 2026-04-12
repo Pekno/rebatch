@@ -63,6 +63,31 @@ Config fields:
 - `batchSize`, `rateLimitDelayMs`, `pollIntervalMs`, `pollTimeoutMs` — tuning
 - `csvColumns` — maps CSV headers to internal fields (email, firstName, lastName, organization)
 
+## CI/CD
+
+### Workflows
+- **`.github/workflows/test.yml`** — runs `npm test` on every PR targeting `main`. Branch protection requires this to pass before merging.
+- **`.github/workflows/auto-version.yml`** — on PR merge, detects bump type from the PR title, opens a `chore: release vX.Y.Z` PR with the updated `package.json`, and enables auto-merge on it.
+- **`.github/workflows/publish.yml`** — triggers when a `chore: release v*` PR is merged, creates the git tag, GitHub release, and publishes to npm.
+
+### Automatic versioning
+Version is bumped automatically based on the PR title (conventional commits):
+
+| PR title | Bump |
+|---|---|
+| Contains `BREAKING CHANGE` (title or body) | `major` |
+| Starts with `feat:` or `feat(...):` | `minor` |
+| Anything else (`fix:`, `chore:`, `docs:`, etc.) | `patch` |
+
+The new version is computed from the latest git tag. A release PR is opened automatically and merges itself once CI passes — no branch protection bypass required. **Do not manually edit `package.json` version** — it is managed by the workflow.
+
+### Required secrets
+- `NPM_TOKEN` — npm publish token (set in GitHub repo secrets)
+- `GITHUB_TOKEN` — automatically provided by GitHub Actions (needs `contents: write` and `pull-requests: write`)
+
+### Required GitHub repo settings
+- **Allow auto-merge**: Settings → General → Pull Requests → Allow auto-merge
+
 ## Development notes
 
 - Resend rate limit: 2 req/s. The `rateLimitDelayMs` (default 600ms) adds delay before each API call. 429s are retried with backoff.
