@@ -94,3 +94,4 @@ The new version is computed from the latest git tag. A release PR is opened auto
 - CSV reader auto-detects comma/semicolon delimiters and handles BOM.
 - Logger auto-detects Windows vs Unix for terminal symbols.
 - The `init` command auto-creates the `email_recipients` table in Supabase if it doesn't exist.
+
