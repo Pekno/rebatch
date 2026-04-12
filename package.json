@@ -1,6 +1,6 @@
 {
   "name": "@pekno/rebatch",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "rebatch — CLI tool to send bulk emails via Resend's free-tier Broadcast API with Supabase tracking",
   "type": "module",
   "bin": {
